@@ -8,20 +8,20 @@
  * registers the activation and deactivation functions, and defines a function
  * that starts the plugin.
  *
- * @link              http://example.com
+ * @link              http://barooney.de/meine-projekte/wordpress-indesign-exchange/
  * @since             1.0.0
  * @package           Wordpress_Indesign_Exchange
  *
  * @wordpress-plugin
- * Plugin Name:       WordPress Plugin Boilerplate
- * Plugin URI:        http://example.com/plugin-name-uri/
- * Description:       This is a short description of what the plugin does. It's displayed in the WordPress dashboard.
+ * Plugin Name:       WordPress InDesign Exchange
+ * Plugin URI:        http://barooney.de/meine-projekte/wordpress-indesign-exchange/
+ * Description:       A plugin that will help users to get their WordPress articles exported and easily re-imported into InDesign.
  * Version:           1.0.0
- * Author:            Your Name or Your Company
- * Author URI:        http://example.com/
+ * Author:            Baron IT Consulting
+ * Author URI:        http://barooney.de/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain:       plugin-name
+ * Text Domain:       wordpress-indesign-exchange
  * Domain Path:       /languages
  */
 
