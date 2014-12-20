@@ -73,7 +73,7 @@ class Wordpress_Indesign_Exchange_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->Wordpress_Indesign_Exchange, plugin_dir_url( __FILE__ ) . 'css/plugin-name-admin.css', array(), $this->version, 'all' );
+		wp_enqueue_style( $this->Wordpress_Indesign_Exchange, plugin_dir_url( __FILE__ ) . 'css/wordpress-indesign-exchange-admin.css', array(), $this->version, 'all' );
 
 	}
 
@@ -96,7 +96,7 @@ class Wordpress_Indesign_Exchange_Admin {
 		 * class.
 		 */
 
-		wp_enqueue_script( $this->Wordpress_Indesign_Exchange, plugin_dir_url( __FILE__ ) . 'js/plugin-name-admin.js', array( 'jquery' ), $this->version, false );
+		wp_enqueue_script( $this->Wordpress_Indesign_Exchange, plugin_dir_url( __FILE__ ) . 'js/wordpress-indesign-exchange-admin.js', array( 'jquery' ), $this->version, false );
 
 	}
 
@@ -120,5 +120,23 @@ class Wordpress_Indesign_Exchange_Admin {
 	 */
 	public function add_management_page() {
 		add_management_page('InDesign Exchange', 'InDesign Exchange', 'publish_posts', plugin_dir_path( __FILE__ ) . 'partials/wordpress-indesign-exchange-admin-management.php');
+	}
+
+	public function get_indesign_xml() {
+		global $pagenow;
+		if ($pagenow=='tools.php' && isset($_GET['indesign_download']) && $_GET['indesign_download']=='1') {
+			// user wants to download xml export file
+			$requirement = array(
+				'filename' => isset($_GET['filename']) ? $_GET['filename'] : 'export.xml',
+				'root_element' => isset($_GET['rootElement']) ? $_GET['rootElement'] : 'indesign-export',
+			);
+			header("Content-type: application/xml");
+			header("Content-Disposition: attachment; filename=" . $requirement['filename']);
+			header("Pragma: no-cache");
+			header("Expires: 0");
+			$xml = simplexml_load_string('<' . $requirement['root_element'] . ' />');
+			echo $xml->asXML();
+			exit();
+		}
 	}
 }

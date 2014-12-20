@@ -29,4 +29,30 @@
 	 * be doing this, we should try to minimize doing that in our own work.
 	 */
 
+	 
+	$('#wordpress-indesign-exchange-management').ready(function() {
+		var downloadurl = '',
+			IdExportOptions = {
+				filename: 'export.xml',
+				rootElement: 'indesign-export'
+			};
+
+		var setWordpressIndesignExchangeDownloadUrl = function() {
+			downloadurl = exporturl + '?indesign_download=1';
+			Object.keys(IdExportOptions).forEach(function(k) {
+				downloadurl += '&' + k + '=' + IdExportOptions[k];
+			});
+			$('#download-indesign-exchange-xml').attr('href', downloadurl);
+		};
+
+		$('#download-indesign-exchange-filename').on('keyup', function() {
+			IdExportOptions.filename = $(this).val();
+			setWordpressIndesignExchangeDownloadUrl();
+		});
+		$('#download-indesign-exchange-root-element').on('keyup', function() {
+			IdExportOptions.rootElement = $(this).val();
+			setWordpressIndesignExchangeDownloadUrl();
+		});
+	});
+
 })( jQuery );

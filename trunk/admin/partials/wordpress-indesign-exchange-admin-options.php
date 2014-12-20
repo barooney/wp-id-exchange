@@ -15,5 +15,5 @@
 
 <!-- This file should primarily consist of HTML with a little bit of PHP. -->
 <div id="wordpress-indesign-exchange-options" class="wrap">
-	<h1>WordPress InDesign Exchange Options</h1>
+	<h2>WordPress InDesign Exchange Options</h2>
 </div>
