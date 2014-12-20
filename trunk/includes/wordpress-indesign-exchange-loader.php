@@ -19,7 +19,7 @@
  *
  * @package    Wordpress_Indesign_Exchange
  * @subpackage Wordpress_Indesign_Exchange/includes
- * @author     Your Name <email@example.com>
+ * @author     Daniel Baron <daniel@barooney.de>
  */
 class Wordpress_Indesign_Exchange_Loader {
 
