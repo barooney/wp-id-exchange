@@ -6,7 +6,7 @@
  * A class definition that includes attributes and functions used across both the
  * public-facing side of the site and the dashboard.
  *
- * @link       http://example.com
+ * @link       http://barooney.de/meine-projekte/wordpress-indesign-exchange/
  * @since      1.0.0
  *
  * @package    Wordpress_Indesign_Exchange
@@ -152,6 +152,8 @@ class Wordpress_Indesign_Exchange {
 
 		$plugin_admin = new Wordpress_Indesign_Exchange_Admin( $this->get_Wordpress_Indesign_Exchange(), $this->get_version() );
 
+		$this->loader->add_action( 'admin_menu', $plugin_admin, 'add_options_page' );
+		$this->loader->add_action( 'admin_menu', $plugin_admin, 'add_management_page' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 

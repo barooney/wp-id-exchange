@@ -3,7 +3,7 @@
 /**
  * The dashboard-specific functionality of the plugin.
  *
- * @link       http://example.com
+ * @link       http://barooney.de/meine-projekte/wordpress-indesign-exchange/
  * @since      1.0.0
  *
  * @package    Wordpress_Indesign_Exchange
@@ -100,4 +100,25 @@ class Wordpress_Indesign_Exchange_Admin {
 
 	}
 
+	/**
+	 *
+	 * Register the options page
+	 *
+	 * @since 	1.0.0
+	 *
+	 */
+	public function add_options_page() {
+		add_options_page('InDesign Exchange Settings', 'InDesign Exchange', 'manage_options', plugin_dir_path( __FILE__ ) . 'partials/wordpress-indesign-exchange-admin-options.php');
+	}
+
+	/**
+	 *
+	 * Register the management page
+	 *
+	 * @since 	1.0.0
+	 *
+	 */
+	public function add_management_page() {
+		add_management_page('InDesign Exchange', 'InDesign Exchange', 'publish_posts', plugin_dir_path( __FILE__ ) . 'partials/wordpress-indesign-exchange-admin-management.php');
+	}
 }

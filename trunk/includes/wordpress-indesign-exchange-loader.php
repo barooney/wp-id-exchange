@@ -3,7 +3,7 @@
 /**
  * Register all actions and filters for the plugin
  *
- * @link       http://example.com
+ * @link       http://barooney.de/meine-projekte/wordpress-indesign-exchange/
  * @since      1.0.0
  *
  * @package    Wordpress_Indesign_Exchange

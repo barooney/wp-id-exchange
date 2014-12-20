@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Provide a public-facing view for the plugin
+ * Provide a dashboard view for the plugin
  *
  * This file is used to markup the public-facing aspects of the plugin.
  *
@@ -9,8 +9,11 @@
  * @since      1.0.0
  *
  * @package    Wordpress_Indesign_Exchange
- * @subpackage Wordpress_Indesign_Exchange/public/partials
+ * @subpackage Wordpress_Indesign_Exchange/admin/partials
  */
 ?>
 
 <!-- This file should primarily consist of HTML with a little bit of PHP. -->
+<div id="wordpress-indesign-exchange-management" class="wrap">
+	<h1>WordPress InDesign Exchange</h1>
+</div>
