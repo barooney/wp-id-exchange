@@ -129,13 +129,61 @@ class Wordpress_Indesign_Exchange_Admin {
 			$requirement = array(
 				'filename' => isset($_GET['filename']) ? $_GET['filename'] : 'export.xml',
 				'root_element' => isset($_GET['rootElement']) ? $_GET['rootElement'] : 'indesign-export',
+				'date_format' => isset($_GET['dateFormat']) ? $_GET['dateFormat'] : 'd.m.Y',
+				'include' => isset($_GET['include']) ? $_GET['include'] : '',
+
 			);
-			header("Content-type: application/xml");
+			header("Content-type: application/xml; charset=UTF-8");
 			header("Content-Disposition: attachment; filename=" . $requirement['filename']);
 			header("Pragma: no-cache");
 			header("Expires: 0");
-			$xml = simplexml_load_string('<' . $requirement['root_element'] . ' />');
-			echo $xml->asXML();
+			$dom = new DOMDocument( "1.0", "UTF-8" );
+			$dom->preserveWhitespace = false;
+			$dom->formatOutput = false;
+
+			$root = $dom->createElement($requirement['root_element']);
+
+			$posts = get_posts(array(
+				'posts_per_page'   => -1,
+				'offset'           => 0,
+				'category'         => '',
+				'category_name'    => '',
+				'orderby'          => 'post_date',
+				'order'            => 'DESC',
+				'include'          => $requirement['include'],
+				'exclude'          => '',
+				'meta_key'         => '',
+				'meta_value'       => '',
+				'post_type'        => 'post',
+				'post_mime_type'   => '',
+				'post_parent'      => '',
+				'post_status'      => 'publish',
+				'suppress_filters' => true
+			));
+
+			foreach($posts as $p) {
+				$xml_post = $dom->createElement($p->post_type);
+				$xml_post->setAttribute('id', $p->ID);
+				$post_title = $dom->createElement('post_title', $p->post_title);
+				$xml_post->appendChild($post_title);
+				$post_date = $dom->createElement('post_date', date_create($p->post_date)->format($requirement['date_format']));
+				$xml_post->appendChild($post_date);
+
+				$post_content = $p->post_content;
+				$post_content_paragraphs = explode("\n", $post_content);
+				$post_content = $dom->createElement('post_content');
+
+				foreach($post_content_paragraphs as $para) {
+					if ($para !== '' && $para !== '<!--more-->') $post_content->appendChild($dom->createElement('p', $para));
+				}
+				$xml_post->appendChild($post_content);
+
+				$root->appendChild($xml_post);
+			}
+
+			$dom->appendChild($root);
+
+			echo $dom->saveXML();
 			exit();
 		}
 	}

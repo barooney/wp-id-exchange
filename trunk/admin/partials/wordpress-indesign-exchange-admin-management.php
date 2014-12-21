@@ -25,6 +25,14 @@
 			<th scope="row">Root-Element</th>
 			<td><input type="text" id="download-indesign-exchange-root-element" value="indesign-export" placeholder="indesign-export"></td>
 		</tr>
+		<tr valign="top">
+			<th scope="row">Datums-Format</th>
+			<td><input type="text" id="download-indesign-exchange-date-format" value="d.m.Y" placeholder="d.m.Y"></td>
+		</tr>
+		<tr valign="top">
+			<th scope="row">Posts einschließen</th>
+			<td><input type="text" id="download-indesign-exchange-include" value="358,1170,1169" placeholder="358,1170,1169"></td>
+		</tr>
 	</table>
 	<a id="download-indesign-exchange-xml" class="button button-primary button-large" href="<?php echo admin_url('tools.php?indesign_download=1'); ?>">Download XML</a>
 </div>
