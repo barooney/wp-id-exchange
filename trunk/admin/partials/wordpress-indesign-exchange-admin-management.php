@@ -35,6 +35,7 @@
 		</tr>
 	</table>
 	<a id="download-indesign-exchange-xml" class="button button-primary button-large" href="<?php echo admin_url('tools.php?indesign_download=1'); ?>">Download XML</a>
+	<a id="download-indesign-exchange-xslt" class="button button-primary button-large" href="<?php echo admin_url('tools.php?indesign_xslt_download=1'); ?>">Download XSLT</a>
 </div>
 <script type="text/javascript">
 	var exporturl = '<?php echo admin_url('tools.php'); ?>';

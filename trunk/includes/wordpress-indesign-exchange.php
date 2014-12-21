@@ -152,7 +152,10 @@ class Wordpress_Indesign_Exchange {
 
 		$plugin_admin = new Wordpress_Indesign_Exchange_Admin( $this->get_Wordpress_Indesign_Exchange(), $this->get_version() );
 
+		$this->loader->add_action( 'wp_ajax_nopriv_get_indesign_xslt', $plugin_admin, 'get_indesign_xslt_ajax' );
+
 		$this->loader->add_action( 'plugins_loaded', $plugin_admin, 'get_indesign_xml' );
+		$this->loader->add_action( 'plugins_loaded', $plugin_admin, 'get_indesign_xslt' );
 
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'add_options_page' );
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'add_management_page' );
