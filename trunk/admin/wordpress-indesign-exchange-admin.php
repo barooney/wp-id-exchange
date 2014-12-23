@@ -133,15 +133,15 @@ class Wordpress_Indesign_Exchange_Admin {
 				'include' => isset($_GET['include']) ? $_GET['include'] : '',
 
 			);
-			header("Content-type: application/xml; charset=UTF-8");
-			header("Content-Disposition: attachment; filename=" . $requirement['filename']);
+			header("Content-type: application/zip");
+			header("Content-Disposition: attachment; filename=" . $requirement['filename'] . '.zip');
 			header("Pragma: no-cache");
 			header("Expires: 0");
 			$dom = new DOMDocument( "1.0", "UTF-8" );
 			$dom->preserveWhitespace = false;
 			$dom->formatOutput = false;
 
-			$stylesheet = $dom->createProcessingInstruction('xml-stylesheet', 'type="text/xsl" href="' . admin_url('admin-ajax.php?action=get_indesign_xslt') . '"');
+			$stylesheet = $dom->createProcessingInstruction('xml-stylesheet', 'type="text/xsl" href="' . $requirement['filename'] . '.xslt"');
 			$dom->appendChild($stylesheet);
 
 			$root = $dom->createElement($requirement['root_element']);
@@ -167,6 +167,7 @@ class Wordpress_Indesign_Exchange_Admin {
 			foreach($posts as $p) {
 				$xml_post = $dom->createElement($p->post_type);
 				$xml_post->setAttribute('id', $p->ID);
+				
 				$post_title = $dom->createElement('post_title', $p->post_title);
 				$xml_post->appendChild($post_title);
 				$post_date = $dom->createElement('post_date', date_create($p->post_date)->format($requirement['date_format']));
@@ -189,25 +190,19 @@ class Wordpress_Indesign_Exchange_Admin {
 
 			$dom->appendChild($root);
 
-			echo $dom->saveXML();
+			$zip = new ZipArchive();
+			$filename = tempnam('/tmp/', 'wp-id-exchange-');
+			if ($zip->open($filename, ZipArchive::CREATE)!==TRUE) {
+				exit("cannot open <$filename>\n");
+			}
+
+			$zip->addFromString($requirement['filename'] . '.xml', $dom->saveXML());
+			$zip->addFromString($requirement['filename'] . '.xslt', file_get_contents(plugin_dir_path(__FILE__) . '/partials/export.xslt'));
+			//$zip->addFile($thisdir . "/too.php","/testfromfile.php");
+			$zip->close();
+
+			echo file_get_contents($filename);
 			exit();
 		}
-	}
-
-	public function get_indesign_xslt() {
-		global $pagenow;
-		if ($pagenow=='tools.php' && isset($_GET['indesign_xslt_download']) && $_GET['indesign_xslt_download']=='1') {
-			header("Content-type: application/xml; charset=UTF-8");
-			header("Content-Disposition: attachment; filename=export.xslt");
-			header("Pragma: no-cache");
-			header("Expires: 0");
-			echo file_get_contents(plugin_dir_path(__FILE__) . '/partials/export.xslt');
-			exit();
-		}
-	}
-
-	public function get_indesign_xslt_ajax() {
-		echo file_get_contents(plugin_dir_path(__FILE__) . '/partials/export.xslt');
-		die();
 	}
 }

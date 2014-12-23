@@ -33,7 +33,7 @@
 	$('#wordpress-indesign-exchange-management').ready(function() {
 		var downloadurl = '',
 			IdExportOptions = {
-				filename: 'export.xml',
+				filename: 'export',
 				rootElement: 'indesign-export',
 				dateFormat: 'd.m.Y',
 				include: '358,1170,1169',

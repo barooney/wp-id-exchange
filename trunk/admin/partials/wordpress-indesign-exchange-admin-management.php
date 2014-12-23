@@ -19,7 +19,7 @@
 	<table class="form-table">
 		<tr valign="top">
 			<th scope="row">Filename</th>
-			<td><input type="text" id="download-indesign-exchange-filename" value="export.xml" placeholder="export.xml"></td>
+			<td><input type="text" id="download-indesign-exchange-filename" value="export" placeholder="export">.xml</td>
 		</tr>
 		<tr valign="top">
 			<th scope="row">Root-Element</th>
@@ -31,11 +31,10 @@
 		</tr>
 		<tr valign="top">
 			<th scope="row">Posts einschließen</th>
-			<td><input type="text" id="download-indesign-exchange-include" value="358,1170,1169" placeholder="358,1170,1169"></td>
+			<td><input type="text" id="download-indesign-exchange-include" value="555" placeholder="555"></td>
 		</tr>
 	</table>
-	<a id="download-indesign-exchange-xml" class="button button-primary button-large" href="<?php echo admin_url('tools.php?indesign_download=1'); ?>">Download XML</a>
-	<a id="download-indesign-exchange-xslt" class="button button-primary button-large" href="<?php echo admin_url('tools.php?indesign_xslt_download=1'); ?>">Download XSLT</a>
+	<a id="download-indesign-exchange-xml" class="button button-primary button-large" href="<?php echo admin_url('tools.php?indesign_download=1'); ?>">Download work data</a>
 </div>
 <script type="text/javascript">
 	var exporturl = '<?php echo admin_url('tools.php'); ?>';
