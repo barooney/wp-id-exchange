@@ -32,6 +32,7 @@
 	 
 	$('#wordpress-indesign-exchange-management').ready(function() {
 		var downloadurl = '',
+			exporturl = exporturl || '',
 			IdExportOptions = {
 				filename: 'export',
 				rootElement: 'indesign-export',
@@ -40,11 +41,13 @@
 			};
 
 		var setWordpressIndesignExchangeDownloadUrl = function() {
-			downloadurl = exporturl + '?indesign_download=1';
-			Object.keys(IdExportOptions).forEach(function(k) {
-				downloadurl += '&' + k + '=' + IdExportOptions[k];
-			});
-			$('#download-indesign-exchange-xml').attr('href', downloadurl);
+			if (!exporturl) {
+				downloadurl = exporturl + '?indesign_download=1';
+				Object.keys(IdExportOptions).forEach(function(k) {
+					downloadurl += '&' + k + '=' + IdExportOptions[k];
+				});
+				$('#download-indesign-exchange-xml').attr('href', downloadurl);
+			}
 		};
 		setWordpressIndesignExchangeDownloadUrl();
 

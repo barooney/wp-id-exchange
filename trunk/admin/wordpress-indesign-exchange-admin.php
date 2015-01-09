@@ -123,7 +123,14 @@ class Wordpress_Indesign_Exchange_Admin {
 	}
 
 	public function get_indesign_xml() {
-		global $pagenow;
+		// initialize for shortcodes
+		require_once(ABSPATH . '/wp-settings.php');
+		require_once(ABSPATH . '/wp-load.php');
+		require_once(ABSPATH . WPINC . '/load.php');
+		wp_load_translations_early();
+		global $pagenow, $wp_locale, $wp_rewrite;
+		$wp_rewrite = new WP_Rewrite();
+
 		if ($pagenow=='tools.php' && isset($_GET['indesign_download']) && $_GET['indesign_download']=='1') {
 			// user wants to download xml export file
 			$requirement = array(
@@ -133,10 +140,6 @@ class Wordpress_Indesign_Exchange_Admin {
 				'include' => isset($_GET['include']) ? $_GET['include'] : '',
 
 			);
-			header("Content-type: application/zip");
-			header("Content-Disposition: attachment; filename=" . $requirement['filename'] . '.zip');
-			header("Pragma: no-cache");
-			header("Expires: 0");
 			$dom = new DOMDocument( "1.0", "UTF-8" );
 			$dom->preserveWhitespace = false;
 			$dom->formatOutput = false;
@@ -176,7 +179,9 @@ class Wordpress_Indesign_Exchange_Admin {
 				$post_author = $dom->createElement('post_author', get_the_author_meta('display_name', $p->post_author));
 				$xml_post->appendChild($post_author);
 
-				$post_content = $p->post_content;
+				$post_content = apply_filters('the_content', $p->post_content, $p->ID);
+				echo $post_content;
+				exit();
 				$post_content_paragraphs = explode("\n", $post_content);
 				$post_content = $dom->createElement('post_content');
 
@@ -197,9 +202,14 @@ class Wordpress_Indesign_Exchange_Admin {
 			}
 
 			$zip->addFromString($requirement['filename'] . '.xml', $dom->saveXML());
-			$zip->addFromString($requirement['filename'] . '.xslt', file_get_contents(plugin_dir_path(__FILE__) . '/partials/export.xslt'));
+			$zip->addFile($requirement['filename'] . '.xslt', plugin_dir_path(__FILE__) . '/partials/export.xslt');
 			//$zip->addFile($thisdir . "/too.php","/testfromfile.php");
 			$zip->close();
+
+			header("Content-type: application/zip");
+			header("Content-Disposition: attachment; filename=" . $requirement['filename'] . '.zip');
+			header("Pragma: no-cache");
+			header("Expires: 0");
 
 			echo file_get_contents($filename);
 			exit();
