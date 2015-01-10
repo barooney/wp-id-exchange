@@ -27,7 +27,7 @@ class Wordpress_Indesign_Exchange_Admin {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $Wordpress_Indesign_Exchange    The ID of this plugin.
+	 * @var      string 		$Wordpress_Indesign_Exchange    The ID of this plugin.
 	 */
 	private $Wordpress_Indesign_Exchange;
 
@@ -36,9 +36,36 @@ class Wordpress_Indesign_Exchange_Admin {
 	 *
 	 * @since    1.0.0
 	 * @access   private
-	 * @var      string    $version    The current version of this plugin.
+	 * @var      string   	 	$version    The current version of this plugin.
 	 */
 	private $version;
+
+	/**
+	 * The root dom element
+	 *
+	 * @since	1.0.0
+	 * @access	private
+	 * @var		DOMDocument		$dom		The root dom element.
+	 */
+	private static $dom;
+
+	/**
+	 * The list of files, which need to be exported.
+	 *
+	 * @since	1.0.0
+	 * @access	public
+	 * @var		array			$files		The list of files, which need to be exported.
+	 */
+	public static $files;
+
+	/**
+	 * The status, if a gallery was found.
+	 *
+	 * @since	1.0.0
+	 * @access	public
+	 * @var		boolean			$gallery_found		The status, if a gallery was found.
+	 */
+	public static $gallery_found;
 
 	/**
 	 * Initialize the class and set its properties.
@@ -51,7 +78,8 @@ class Wordpress_Indesign_Exchange_Admin {
 
 		$this->Wordpress_Indesign_Exchange = $Wordpress_Indesign_Exchange;
 		$this->version = $version;
-
+		$this->files = array();
+		$this->gallery_found = false;
 	}
 
 	/**
@@ -135,19 +163,19 @@ class Wordpress_Indesign_Exchange_Admin {
 			// user wants to download xml export file
 			$requirement = array(
 				'filename' => isset($_GET['filename']) ? $_GET['filename'] : 'export.xml',
-				'root_element' => isset($_GET['rootElement']) ? $_GET['rootElement'] : 'indesign-export',
+				'root_element' => isset($_GET['rootElement']) ? $_GET['rootElement'] : 'indesign-import',
 				'date_format' => isset($_GET['dateFormat']) ? $_GET['dateFormat'] : 'd.m.Y',
 				'include' => isset($_GET['include']) ? $_GET['include'] : '',
-
 			);
-			$dom = new DOMDocument( "1.0", "UTF-8" );
-			$dom->preserveWhitespace = false;
-			$dom->formatOutput = false;
 
-			$stylesheet = $dom->createProcessingInstruction('xml-stylesheet', 'type="text/xsl" href="' . $requirement['filename'] . '.xslt"');
-			$dom->appendChild($stylesheet);
+			$this->dom = new DOMDocument( "1.0", "UTF-8" );
+			$this->dom->preserveWhitespace = false;
+			$this->dom->formatOutput = false;
 
-			$root = $dom->createElement($requirement['root_element']);
+			$stylesheet = $this->dom->createProcessingInstruction('xml-stylesheet', 'type="text/xsl" href="' . $requirement['filename'] . '.xslt"');
+			$this->dom->appendChild($stylesheet);
+
+			$root = $this->dom->createElement($requirement['root_element']);
 
 			$posts = get_posts(array(
 				'posts_per_page'   => -1,
@@ -167,43 +195,64 @@ class Wordpress_Indesign_Exchange_Admin {
 				'suppress_filters' => true
 			));
 
+			$zip = new ZipArchive();
+			$filename = tempnam('/tmp/', 'wp-id-exchange-');
+			if ($zip->open($filename, ZipArchive::CREATE) !== TRUE) {
+				exit("cannot open <$filename>\n");
+			}
+
 			foreach($posts as $p) {
-				$xml_post = $dom->createElement($p->post_type);
+				$xml_post = $this->dom->createElement($p->post_type);
 				$xml_post->setAttribute('id', $p->ID);
 				
-				$post_title = $dom->createElement('post_title', $p->post_title);
+				$post_title = $this->dom->createElement('post_title', $p->post_title);
 				$xml_post->appendChild($post_title);
-				$post_date = $dom->createElement('post_date', date_create($p->post_date)->format($requirement['date_format']));
+				$post_date = $this->dom->createElement('post_date', date_create($p->post_date)->format($requirement['date_format']));
 				$xml_post->appendChild($post_date);
 
-				$post_author = $dom->createElement('post_author', get_the_author_meta('display_name', $p->post_author));
+				$post_author = $this->dom->createElement('post_author', get_the_author_meta('display_name', $p->post_author));
 				$xml_post->appendChild($post_author);
 
-				$post_content = apply_filters('the_content', $p->post_content, $p->ID);
-				echo $post_content;
-				exit();
+				// the gallery is a bit tricky, because we need the full size images instead of the small ones, minus all the markup
+				remove_shortcode('gallery', 'gallery_shortcode');
+				add_shortcode('gallery', array('Wordpress_Indesign_Exchange_Admin', 'export_gallery_shortcode'));
+
+				$post_content = $p->post_content;
 				$post_content_paragraphs = explode("\n", $post_content);
-				$post_content = $dom->createElement('post_content');
+				$post_content = $this->dom->createElement('post_content');
 
 				foreach($post_content_paragraphs as $para) {
-					if ($para !== '' && $para !== '<!--more-->') $post_content->appendChild($dom->createElement('p', $para));
+					$last_paragraph = $this->dom->createElement('p', apply_filters('the_content', $para, $p->ID));
+					if (Wordpress_Indesign_Exchange_Admin::$gallery_found === true) {
+						$gallery_element = $this->dom->createElement('gallery');
+						foreach (Wordpress_Indesign_Exchange_Admin::$files as $f) {
+							$image_element = $this->dom->createElement('image');
+							$image_href_attribute = $this->dom->createAttribute('href');
+							$image_href_attribute->value = 'file://attachments/' . basename($f);
+							$image_element->appendChild($image_href_attribute);
+
+							$zip->addFile($f, '/attachments/' . basename($f));
+
+							$gallery_element->appendChild($image_element);
+						}
+						$last_paragraph->appendChild($gallery_element);
+						Wordpress_Indesign_Exchange_Admin::$files = array();
+						Wordpress_Indesign_Exchange_Admin::$gallery_found = false;
+					}
+					$post_content->appendChild($last_paragraph);
 				}
 				$xml_post->appendChild($post_content);
 
 				$root->appendChild($xml_post);
 			}
 
-			$dom->appendChild($root);
+			$this->dom->appendChild($root);
 
-			$zip = new ZipArchive();
-			$filename = tempnam('/tmp/', 'wp-id-exchange-');
-			if ($zip->open($filename, ZipArchive::CREATE)!==TRUE) {
-				exit("cannot open <$filename>\n");
-			}
+			// echo $this->dom->saveXML();
+			// exit();
 
-			$zip->addFromString($requirement['filename'] . '.xml', $dom->saveXML());
-			$zip->addFile($requirement['filename'] . '.xslt', plugin_dir_path(__FILE__) . '/partials/export.xslt');
-			//$zip->addFile($thisdir . "/too.php","/testfromfile.php");
+			$zip->addFromString($requirement['filename'] . '.xml', $this->dom->saveXML());
+			$zip->addFile(plugin_dir_path(__FILE__) . 'partials/export.xslt', $requirement['filename'] . '.xslt');
 			$zip->close();
 
 			header("Content-type: application/zip");
@@ -214,5 +263,14 @@ class Wordpress_Indesign_Exchange_Admin {
 			echo file_get_contents($filename);
 			exit();
 		}
+	}
+
+	public static function export_gallery_shortcode($atts = array(), $content) {
+		if (!isset($atts['ids'])) return;
+		$ids = explode(',', $atts['ids']);
+		foreach ($ids as $attachment) {
+			Wordpress_Indesign_Exchange_Admin::$files[] = get_attached_file($attachment);
+		}
+		Wordpress_Indesign_Exchange_Admin::$gallery_found = true;
 	}
 }
