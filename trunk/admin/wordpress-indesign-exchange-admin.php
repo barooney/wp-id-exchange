@@ -168,31 +168,22 @@ class Wordpress_Indesign_Exchange_Admin {
 				'include' => isset($_GET['include']) ? $_GET['include'] : '',
 			);
 
-			$this->dom = new DOMDocument( "1.0", "UTF-8" );
-			$this->dom->preserveWhitespace = false;
-			$this->dom->formatOutput = false;
+			Wordpress_Indesign_Exchange_Admin::$dom = new DOMDocument( "1.0", "UTF-8" );
+			Wordpress_Indesign_Exchange_Admin::$dom->preserveWhitespace = false;
+			Wordpress_Indesign_Exchange_Admin::$dom->formatOutput = false;
 
-			$stylesheet = $this->dom->createProcessingInstruction('xml-stylesheet', 'type="text/xsl" href="' . $requirement['filename'] . '.xslt"');
-			$this->dom->appendChild($stylesheet);
+			$stylesheet = Wordpress_Indesign_Exchange_Admin::$dom->createProcessingInstruction('xml-stylesheet', 'type="text/xsl" href="' . $requirement['filename'] . '.xslt"');
+			Wordpress_Indesign_Exchange_Admin::$dom->appendChild($stylesheet);
 
-			$root = $this->dom->createElement($requirement['root_element']);
+			$root = Wordpress_Indesign_Exchange_Admin::$dom->createElement($requirement['root_element']);
 
 			$posts = get_posts(array(
-				'posts_per_page'   => -1,
-				'offset'           => 0,
-				'category'         => '',
-				'category_name'    => '',
+				'posts_per_page'   => 0,
+				'post_type'        => 'any',
 				'orderby'          => 'post_date',
 				'order'            => 'DESC',
 				'include'          => $requirement['include'],
-				'exclude'          => '',
-				'meta_key'         => '',
-				'meta_value'       => '',
-				'post_type'        => 'post',
-				'post_mime_type'   => '',
-				'post_parent'      => '',
-				'post_status'      => 'publish',
-				'suppress_filters' => true
+				'suppress_filters' => true,
 			));
 
 			$zip = new ZipArchive();
@@ -201,17 +192,21 @@ class Wordpress_Indesign_Exchange_Admin {
 				exit("cannot open <$filename>\n");
 			}
 
+			// iterate through the posts
 			foreach($posts as $p) {
-				$xml_post = $this->dom->createElement($p->post_type);
+				$xml_post = Wordpress_Indesign_Exchange_Admin::$dom->createElement($p->post_type);
 				$xml_post->setAttribute('id', $p->ID);
 				
-				$post_title = $this->dom->createElement('post_title', $p->post_title);
+				$post_title = Wordpress_Indesign_Exchange_Admin::$dom->createElement('post_title', $p->post_title);
 				$xml_post->appendChild($post_title);
-				$post_date = $this->dom->createElement('post_date', date_create($p->post_date)->format($requirement['date_format']));
+				$post_date = Wordpress_Indesign_Exchange_Admin::$dom->createElement('post_date', date_create($p->post_date)->format($requirement['date_format']));
 				$xml_post->appendChild($post_date);
 
-				$post_author = $this->dom->createElement('post_author', get_the_author_meta('display_name', $p->post_author));
+				$post_author = Wordpress_Indesign_Exchange_Admin::$dom->createElement('post_author', get_the_author_meta('display_name', $p->post_author));
 				$xml_post->appendChild($post_author);
+
+				// remove the WordPress filter to automatically apply <p> tags
+				remove_filter('the_content', 'wpautop');
 
 				// the gallery is a bit tricky, because we need the full size images instead of the small ones, minus all the markup
 				remove_shortcode('gallery', 'gallery_shortcode');
@@ -219,15 +214,28 @@ class Wordpress_Indesign_Exchange_Admin {
 
 				$post_content = $p->post_content;
 				$post_content_paragraphs = explode("\n", $post_content);
-				$post_content = $this->dom->createElement('post_content');
+				$post_content = Wordpress_Indesign_Exchange_Admin::$dom->createElement('post_content');
 
+				// iterate through the post's paragraphs
 				foreach($post_content_paragraphs as $para) {
-					$last_paragraph = $this->dom->createElement('p', apply_filters('the_content', $para, $p->ID));
+
+					// skip "more" tags
+					// TODO #42: create checkbox to keep them in an article to generate a page break
+					if ('<!--more-->' === $para) {
+						continue;
+					}
+
+					// skip empty paragraphs
+					if ('' === $para) {
+						continue;
+					}
+
+					$last_paragraph = Wordpress_Indesign_Exchange_Admin::$dom->createElement('p', apply_filters('the_content', $para, $p->ID));
 					if (Wordpress_Indesign_Exchange_Admin::$gallery_found === true) {
-						$gallery_element = $this->dom->createElement('gallery');
+						$gallery_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('gallery');
 						foreach (Wordpress_Indesign_Exchange_Admin::$files as $f) {
-							$image_element = $this->dom->createElement('image');
-							$image_href_attribute = $this->dom->createAttribute('href');
+							$image_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('image');
+							$image_href_attribute = Wordpress_Indesign_Exchange_Admin::$dom->createAttribute('href');
 							$image_href_attribute->value = 'file://attachments/' . basename($f);
 							$image_element->appendChild($image_href_attribute);
 
@@ -246,12 +254,16 @@ class Wordpress_Indesign_Exchange_Admin {
 				$root->appendChild($xml_post);
 			}
 
-			$this->dom->appendChild($root);
+			Wordpress_Indesign_Exchange_Admin::$dom->appendChild($root);
 
-			// echo $this->dom->saveXML();
+			// echo Wordpress_Indesign_Exchange_Admin::$dom->saveXML();
 			// exit();
 
-			$zip->addFromString($requirement['filename'] . '.xml', $this->dom->saveXML());
+			$post_content_replaced = Wordpress_Indesign_Exchange_Admin::$dom->saveXML();
+			$post_content_replaced = str_replace('&lt;', '<', $post_content_replaced);
+			$post_content_replaced = str_replace('&gt;', '>', $post_content_replaced);
+
+			$zip->addFromString($requirement['filename'] . '.xml', $post_content_replaced);
 			$zip->addFile(plugin_dir_path(__FILE__) . 'partials/export.xslt', $requirement['filename'] . '.xslt');
 			$zip->close();
 

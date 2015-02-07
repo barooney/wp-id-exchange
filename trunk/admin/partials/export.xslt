@@ -5,7 +5,7 @@
 	<xsl:template match="indesign-export">
 		<indesign-export>
 			
-			<xsl:for-each select="post">
+			<xsl:for-each select="*">
 				<xsl:copy>
 					<xsl:attribute name="id">
 						<xsl:value-of select="@id" />
