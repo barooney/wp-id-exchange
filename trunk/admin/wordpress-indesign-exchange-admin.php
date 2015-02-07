@@ -78,8 +78,8 @@ class Wordpress_Indesign_Exchange_Admin {
 
 		$this->Wordpress_Indesign_Exchange = $Wordpress_Indesign_Exchange;
 		$this->version = $version;
-		$this->files = array();
-		$this->gallery_found = false;
+		Wordpress_Indesign_Exchange_Admin::$files = array();
+		Wordpress_Indesign_Exchange_Admin::$gallery_found = false;
 	}
 
 	/**
