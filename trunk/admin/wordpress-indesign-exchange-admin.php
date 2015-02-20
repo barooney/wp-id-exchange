@@ -217,7 +217,9 @@ class Wordpress_Indesign_Exchange_Admin {
 				$post_content = Wordpress_Indesign_Exchange_Admin::$dom->createElement('post_content');
 
 				// iterate through the post's paragraphs
-				foreach($post_content_paragraphs as $para) {
+				$paragraph_ctr = 0;
+				for ( $paragraph_ctr = 0; $paragraph_ctr < count($post_content_paragraphs); $paragraph_ctr++ ) {
+					$para = $post_content_paragraphs[$paragraph_ctr];
 
 					// skip "more" tags
 					// TODO #42: create checkbox to keep them in an article to generate a page break
@@ -226,11 +228,109 @@ class Wordpress_Indesign_Exchange_Admin {
 					}
 
 					// skip empty paragraphs
-					if ('' === $para) {
+					if ('' === $para || ' ' === $para || '&nbsp;' == $para) {
+						continue;
+					}
+
+					// handle headlines
+					if (strpos($para, '<h1') !== FALSE) {
+						$head_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('h1', strip_tags($para, '<em><strong><i><b>'));
+						$post_content->appendChild($head_element);
+						continue;
+					}
+					if (strpos($para, '<h2') !== FALSE) {
+						$head_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('h2', strip_tags($para, '<em><strong><i><b>'));
+						$post_content->appendChild($head_element);
+						continue;
+					}
+					if (strpos($para, '<h3') !== FALSE) {
+						$head_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('h3', strip_tags($para, '<em><strong><i><b>'));
+						$post_content->appendChild($head_element);
+						continue;
+					}
+					if (strpos($para, '<h4') !== FALSE) {
+						$head_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('h4', strip_tags($para, '<em><strong><i><b>'));
+						$post_content->appendChild($head_element);
+						continue;
+					}
+					if (strpos($para, '<h5') !== FALSE) {
+						$head_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('h5', strip_tags($para, '<em><strong><i><b>'));
+						$post_content->appendChild($head_element);
+						continue;
+					}
+					if (strpos($para, '<h6') !== FALSE) {
+						$head_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('h6', strip_tags($para, '<em><strong><i><b>'));
+						$post_content->appendChild($head_element);
+						continue;
+					}
+
+					// blockquotes and cites
+					if (strpos($para, '<blockquote') !== FALSE) {
+						$blockquote_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('blockquote', strip_tags($para, '<em><strong><i><b>'));
+						$post_content->appendChild($blockquote_element);
+						continue;
+					}
+
+					if (strpos($para, '<cite') !== FALSE) {
+						$blockquote_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('cite', strip_tags($para, '<em><strong><i><b>'));
+						$post_content->appendChild($blockquote_element);
+						continue;
+					}
+
+					// handle tables
+					if (strpos($para, '<table') !== FALSE) {
+						$table_html = $para;
+						do {
+							$paragraph_ctr++;
+							$para = $post_content_paragraphs[$paragraph_ctr];
+							$table_html .= $para;
+						} while (strpos($para, '</table') === FALSE);
+
+						$cols = 0;
+						$table_doc = new DOMDocument;
+						$table_doc->loadHTML($table_html);
+						foreach ($table_doc->childNodes as $node) {
+							if ($node->hasChildNodes() && $node->childNodes->length == 1 && $node->firstChild->nodeName === 'body') { 
+								$table_node = $node->firstChild->firstChild; // <table>
+								foreach ($table_node->childNodes as $table_part) { // <thead>, <tfoot> and <tbody>
+									echo $table_part->nodeName . ": ";
+									foreach ($table_part->childNodes as $table_row) { // <tr>
+										echo $table_row->childNodes->length . "<br>";
+										foreach ($table_row->childNodes as $table_data) {
+											echo $table_data->nodeValue; // <td>, <th>
+											echo '(' . $table_data->getAttribute('colspan') . '), ';
+											$cols += ($table_data->getAttribute('colspan') ? intval($table_data->getAttribute('colspan')) : 1);
+										}
+										echo '<br>';
+										echo 'columns: ' . $cols . '<br>';
+										$cols = 0;
+									}
+								}
+							}
+						}
+						die();
+					}
+
+					// handle lists
+					if (strpos($para, '<ul') !== FALSE) {
+						$list_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('ul');
+						do {
+							$paragraph_ctr++;
+							$para = $post_content_paragraphs[$paragraph_ctr];
+
+							if (strpos($para, '</ul') === FALSE) {
+								$list_item_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('li', strip_tags($para, '<em><strong><i><b>'));
+								$list_element->appendChild($list_item_element);
+							}
+
+						} while (strpos($para, '</ul') === FALSE);
+						$post_content->appendChild($list_element);
 						continue;
 					}
 
 					$last_paragraph = Wordpress_Indesign_Exchange_Admin::$dom->createElement('p', apply_filters('the_content', $para, $p->ID));
+
+					// handle galleries
 					if (Wordpress_Indesign_Exchange_Admin::$gallery_found === true) {
 						$gallery_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('gallery');
 						foreach (Wordpress_Indesign_Exchange_Admin::$files as $f) {
