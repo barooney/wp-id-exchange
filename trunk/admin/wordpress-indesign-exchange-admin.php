@@ -286,29 +286,99 @@ class Wordpress_Indesign_Exchange_Admin {
 							$table_html .= $para;
 						} while (strpos($para, '</table') === FALSE);
 
-						$cols = 0;
+						$table_struct = array();
+
+						$max_cols = 0;
 						$table_doc = new DOMDocument;
 						$table_doc->loadHTML($table_html);
 						foreach ($table_doc->childNodes as $node) {
 							if ($node->hasChildNodes() && $node->childNodes->length == 1 && $node->firstChild->nodeName === 'body') { 
 								$table_node = $node->firstChild->firstChild; // <table>
 								foreach ($table_node->childNodes as $table_part) { // <thead>, <tfoot> and <tbody>
-									echo $table_part->nodeName . ": ";
+									$table_struct[$table_part->nodeName] = array();
 									foreach ($table_part->childNodes as $table_row) { // <tr>
-										echo $table_row->childNodes->length . "<br>";
+										$row = array();
 										foreach ($table_row->childNodes as $table_data) {
-											echo $table_data->nodeValue; // <td>, <th>
-											echo '(' . $table_data->getAttribute('colspan') . '), ';
-											$cols += ($table_data->getAttribute('colspan') ? intval($table_data->getAttribute('colspan')) : 1);
+											$cell = array();
+											switch (get_class($table_data)) {
+												case 'DOMElement':
+													if ($table_data->nodeName === 'td' || $table_data->nodeName === 'th') {
+														$cell['_value'] = $table_data->nodeValue;
+														$cell['colspan'] = intval($table_data->getAttribute('colspan') ? $table_data->getAttribute('colspan') : '1');
+														$cell['rowspan'] = intval($table_data->getAttribute('rowspan') ? $table_data->getAttribute('rowspan') : '1');
+														$row[] = $cell;
+													}
+													break;
+											}
+											$cols = 0;
+											foreach ($row as $c) {
+												$cols += $c['colspan'];
+											}
+											$max_cols = max($max_cols, $cols);
 										}
-										echo '<br>';
-										echo 'columns: ' . $cols . '<br>';
-										$cols = 0;
+										$table_struct[$table_part->nodeName][] = $row;
 									}
 								}
 							}
 						}
-						die();
+						// echo '<pre>';
+						// echo $max_cols;
+						// print_r($table_struct);
+
+						$table_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('table');
+						$table_frame_attribute = Wordpress_Indesign_Exchange_Admin::$dom->createAttribute('frame');
+						$table_frame_attribute->value = 'all';
+						$table_element->appendChild($table_frame_attribute);
+
+						$tgroup_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('tgroup');
+						$tgroup_cols_attribute = Wordpress_Indesign_Exchange_Admin::$dom->createAttribute('cols');
+						$tgroup_cols_attribute->value = $max_cols;
+						$tgroup_element->appendChild($tgroup_cols_attribute);
+
+						for ($i = 0; $i < $max_cols; $i++) {
+							$colspec_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('colspec');
+							$colspec_colname_attribute = Wordpress_Indesign_Exchange_Admin::$dom->createAttribute('colname');
+							$colspec_colname_attribute->value = 'c' . ($i + 1);
+							$colspec_element->appendChild($colspec_colname_attribute);
+
+							$colspec_colwidth_attribute = Wordpress_Indesign_Exchange_Admin::$dom->createAttribute('colwidth');
+							$colspec_colwidth_attribute->value = '261.1377952755pt';
+							$colspec_element->appendChild($colspec_colwidth_attribute);
+
+							$tgroup_element->appendChild($colspec_element);
+						}
+
+						foreach ($table_struct as $t_key => $t_val) {
+							$t_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement($t_key);
+
+							foreach ($t_val as $row) {
+								$t_row = Wordpress_Indesign_Exchange_Admin::$dom->createElement('row');
+
+								foreach ($row as $cell) {
+									$entry_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('entry');
+
+									$entry_align_attribute = Wordpress_Indesign_Exchange_Admin::$dom->createAttribute('align');
+									$entry_align_attribute->value = 'left';
+									$entry_element->appendChild($entry_align_attribute);
+
+									$entry_valign_attribute = Wordpress_Indesign_Exchange_Admin::$dom->createAttribute('valign');
+									$entry_valign_attribute->value = 'top';
+									$entry_element->appendChild($entry_valign_attribute);
+
+									$entry_element->nodeValue = $cell['_value'];
+
+									$t_row->appendChild($entry_element);
+								}
+								$t_element->appendChild($t_row);
+							}
+							$tgroup_element->appendChild($t_element);
+						}
+
+						$table_element->appendChild($tgroup_element);
+						$post_content->appendChild($table_element);
+
+						// die();
+						continue;
 					}
 
 					// handle lists
