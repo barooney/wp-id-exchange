@@ -354,6 +354,7 @@ class Wordpress_Indesign_Exchange_Admin {
 							foreach ($t_val as $row) {
 								$t_row = Wordpress_Indesign_Exchange_Admin::$dom->createElement('row');
 
+								$c = 1;
 								foreach ($row as $cell) {
 									$entry_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('entry');
 
@@ -365,9 +366,27 @@ class Wordpress_Indesign_Exchange_Admin {
 									$entry_valign_attribute->value = 'top';
 									$entry_element->appendChild($entry_valign_attribute);
 
+									if ($cell['colspan'] > 1) {
+										$entry_namest_attribute = Wordpress_Indesign_Exchange_Admin::$dom->createAttribute('namest');
+										$entry_namest_attribute->value = 'c' . $c;
+										$entry_element->appendChild($entry_namest_attribute);
+
+										$entry_nameend_attribute = Wordpress_Indesign_Exchange_Admin::$dom->createAttribute('nameend');
+										$entry_nameend_attribute->value = 'c' . ($cell['colspan'] - $c + 1);
+										$entry_element->appendChild($entry_nameend_attribute);
+									}
+
+									if ($cell['rowspan'] > 1) {
+										$entry_morerows_attribute = Wordpress_Indesign_Exchange_Admin::$dom->createAttribute('morerows');
+										$entry_morerows_attribute->value = ($cell['rowspan'] - 1);
+										$entry_element->appendChild($entry_morerows_attribute);
+									}
+
 									$entry_element->nodeValue = $cell['_value'];
 
 									$t_row->appendChild($entry_element);
+
+									$c++;
 								}
 								$t_element->appendChild($t_row);
 							}
@@ -377,7 +396,6 @@ class Wordpress_Indesign_Exchange_Admin {
 						$table_element->appendChild($tgroup_element);
 						$post_content->appendChild($table_element);
 
-						// die();
 						continue;
 					}
 
