@@ -321,9 +321,6 @@ class Wordpress_Indesign_Exchange_Admin {
 								}
 							}
 						}
-						// echo '<pre>';
-						// echo $max_cols;
-						// print_r($table_struct);
 
 						$table_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('table');
 						$table_frame_attribute = Wordpress_Indesign_Exchange_Admin::$dom->createAttribute('frame');
@@ -418,6 +415,23 @@ class Wordpress_Indesign_Exchange_Admin {
 
 					$last_paragraph = Wordpress_Indesign_Exchange_Admin::$dom->createElement('p', apply_filters('the_content', $para, $p->ID));
 
+					// handle images
+					if (strpos($para, '<img') !== FALSE) {
+						$img_doc = new DOMDocument;
+						$img_doc->loadHTML($para);
+
+						$src = $img_doc->lastChild->lastChild->lastChild->getAttribute('src');
+
+						$f = get_attached_file($this->_get_image_id_from_url($src));
+
+						$image_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('image');
+						$image_href_attribute = Wordpress_Indesign_Exchange_Admin::$dom->createAttribute('href');
+						$image_href_attribute->value = 'file://attachments/' . basename($f);
+						$image_element->appendChild($image_href_attribute);
+
+						$zip->addFile($f, '/attachments/' . basename($f));
+					}
+
 					// handle galleries
 					if (Wordpress_Indesign_Exchange_Admin::$gallery_found === true) {
 						$gallery_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('gallery');
@@ -444,9 +458,6 @@ class Wordpress_Indesign_Exchange_Admin {
 
 			Wordpress_Indesign_Exchange_Admin::$dom->appendChild($root);
 
-			// echo Wordpress_Indesign_Exchange_Admin::$dom->saveXML();
-			// exit();
-
 			$post_content_replaced = Wordpress_Indesign_Exchange_Admin::$dom->saveXML();
 			$post_content_replaced = str_replace('&lt;', '<', $post_content_replaced);
 			$post_content_replaced = str_replace('&gt;', '>', $post_content_replaced);
@@ -472,5 +483,35 @@ class Wordpress_Indesign_Exchange_Admin {
 			Wordpress_Indesign_Exchange_Admin::$files[] = get_attached_file($attachment);
 		}
 		Wordpress_Indesign_Exchange_Admin::$gallery_found = true;
+	}
+
+	private function _get_image_id_from_url( $attachment_url = '' ) {
+ 
+		global $wpdb;
+		$attachment_id = false;
+
+		// If there is no url, return.
+		if ( '' == $attachment_url ) {
+			return;
+		}
+
+		// Get the upload directory paths
+		$upload_dir_paths = wp_upload_dir();
+
+		// Make sure the upload path base directory exists in the attachment URL, to verify that we're working with a media library image
+		if ( false !== strpos( $attachment_url, $upload_dir_paths['baseurl'] ) ) {
+
+			// If this is the URL of an auto-generated thumbnail, get the URL of the original image
+			$attachment_url = preg_replace( '/-\d+x\d+(?=\.(jpg|jpeg|png|gif)$)/i', '', $attachment_url );
+
+			// Remove the upload path base directory from the attachment URL
+			$attachment_url = str_replace( $upload_dir_paths['baseurl'] . '/', '', $attachment_url );
+
+			// Finally, run a custom database query to get the attachment ID from the modified attachment URL
+			$attachment_id = $wpdb->get_var( $wpdb->prepare( "SELECT wposts.ID FROM $wpdb->posts wposts, $wpdb->postmeta wpostmeta WHERE wposts.ID = wpostmeta.post_id AND wpostmeta.meta_key = '_wp_attached_file' AND wpostmeta.meta_value = '%s' AND wposts.post_type = 'attachment'", $attachment_url ) );
+
+		}
+
+		return $attachment_id;
 	}
 }
