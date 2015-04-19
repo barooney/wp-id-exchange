@@ -166,6 +166,7 @@ class Wordpress_Indesign_Exchange_Admin {
 				'root_element' => isset($_GET['rootElement']) ? $_GET['rootElement'] : 'indesign-import',
 				'date_format' => isset($_GET['dateFormat']) ? $_GET['dateFormat'] : 'd.m.Y',
 				'include' => isset($_GET['include']) ? $_GET['include'] : '',
+				'category' => isset($_GET['category']) ? $_GET['category'] : '',
 			);
 
 			Wordpress_Indesign_Exchange_Admin::$dom = new DOMDocument( "1.0", "UTF-8" );
@@ -177,14 +178,16 @@ class Wordpress_Indesign_Exchange_Admin {
 
 			$root = Wordpress_Indesign_Exchange_Admin::$dom->createElement($requirement['root_element']);
 
-			$posts = get_posts(array(
+			$args = array(
 				'posts_per_page'   => 0,
-				'post_type'        => 'any',
+				'post_type'        => 'post',
 				'orderby'          => 'post_date',
 				'order'            => 'DESC',
+				'category'         => $requirement['category'],
 				'include'          => $requirement['include'],
 				'suppress_filters' => true,
-			));
+			);
+			$posts = get_posts($args);
 
 			$zip = new ZipArchive();
 			$filename = tempnam('/tmp/', 'wp-id-exchange-');
@@ -196,6 +199,19 @@ class Wordpress_Indesign_Exchange_Admin {
 			foreach($posts as $p) {
 				$xml_post = Wordpress_Indesign_Exchange_Admin::$dom->createElement($p->post_type);
 				$xml_post->setAttribute('id', $p->ID);
+				$xml_post->setAttribute('name', $p->post_name);
+
+				$thumbnail = get_post_thumbnail_id($p->ID);
+				if ($thumbnail) {
+					$f = get_attached_file(get_post_thumbnail_id($p->ID));
+					$post_thumbnail_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('post_thumbnail');
+					$post_thumbnail_href_attribute = Wordpress_Indesign_Exchange_Admin::$dom->createAttribute('href');
+					$post_thumbnail_href_attribute->value = 'file://attachments/' . basename($f);
+					$post_thumbnail_element->appendChild($post_thumbnail_href_attribute);
+					$xml_post->appendChild($post_thumbnail_element);
+
+					$zip->addFile($f, '/attachments/' . basename($f));
+				}
 				
 				$post_title = Wordpress_Indesign_Exchange_Admin::$dom->createElement('post_title', $p->post_title);
 				$xml_post->appendChild($post_title);
@@ -204,6 +220,11 @@ class Wordpress_Indesign_Exchange_Admin {
 
 				$post_author = Wordpress_Indesign_Exchange_Admin::$dom->createElement('post_author', get_the_author_meta('display_name', $p->post_author));
 				$xml_post->appendChild($post_author);
+
+				if ('' !== $p->post_excerpt) {
+					$post_excerpt = Wordpress_Indesign_Exchange_Admin::$dom->createElement('post_excerpt', trim($p->post_excerpt));
+					$xml_post->appendChild($post_excerpt);
+				}
 
 				// remove the WordPress filter to automatically apply <p> tags
 				remove_filter('the_content', 'wpautop');
@@ -461,6 +482,8 @@ class Wordpress_Indesign_Exchange_Admin {
 			$post_content_replaced = Wordpress_Indesign_Exchange_Admin::$dom->saveXML();
 			$post_content_replaced = str_replace('&lt;', '<', $post_content_replaced);
 			$post_content_replaced = str_replace('&gt;', '>', $post_content_replaced);
+			$post_content_replaced = str_replace('&#13;', '', $post_content_replaced);
+			$post_content_replaced = str_replace('<p></p>', '', $post_content_replaced);
 
 			$zip->addFromString($requirement['filename'] . '.xml', $post_content_replaced);
 			$zip->addFile(plugin_dir_path(__FILE__) . 'partials/export.xslt', $requirement['filename'] . '.xslt');

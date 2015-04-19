@@ -37,7 +37,8 @@
 				filename: 'export',
 				rootElement: 'indesign-export',
 				dateFormat: 'd.m.Y',
-				include: '358,1170,1169',
+				category: '',
+				include: '',
 			};
 
 		var setWordpressIndesignExchangeDownloadUrl = function() {
@@ -46,6 +47,7 @@
 				Object.keys(IdExportOptions).forEach(function(k) {
 					downloadurl += '&' + k + '=' + IdExportOptions[k];
 				});
+				console.log(downloadurl);
 				$('#download-indesign-exchange-xml').attr('href', downloadurl);
 			}
 		};
@@ -61,6 +63,10 @@
 		});
 		$('#download-indesign-exchange-date-format').on('keyup', function() {
 			IdExportOptions.dateFormat = $(this).val();
+			setWordpressIndesignExchangeDownloadUrl();
+		});
+		$('#download-indesign-exchange-category').on('change', function() {
+			IdExportOptions.category = $(this).val();
 			setWordpressIndesignExchangeDownloadUrl();
 		});
 		$('#download-indesign-exchange-include').on('keyup', function() {

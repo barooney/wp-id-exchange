@@ -30,8 +30,12 @@
 			<td><input type="text" id="download-indesign-exchange-date-format" value="d.m.Y" placeholder="d.m.Y"></td>
 		</tr>
 		<tr valign="top">
+			<th scope="row">Kategorie</th>
+			<td><?php wp_dropdown_categories(array('id' => 'download-indesign-exchange-category')); ?></td>
+		</tr>
+		<tr valign="top">
 			<th scope="row">Posts einschließen</th>
-			<td><input type="text" id="download-indesign-exchange-include" value="555" placeholder="555"></td>
+			<td><input type="text" id="download-indesign-exchange-include" value="" placeholder="123,456,789"></td>
 		</tr>
 	</table>
 	<a id="download-indesign-exchange-xml" class="button button-primary button-large" href="<?php echo admin_url('tools.php?indesign_download=1'); ?>">Download work data</a>
