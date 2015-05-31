@@ -18,7 +18,7 @@
 	<h2>WordPress InDesign Exchange</h2>
 	<table class="form-table">
 		<tr valign="top">
-			<th scope="row">Filename</th>
+			<th scope="row">Dateiname</th>
 			<td><input type="text" id="download-indesign-exchange-filename" value="export" placeholder="export">.xml</td>
 		</tr>
 		<tr valign="top">
@@ -38,7 +38,7 @@
 			<td><input type="text" id="download-indesign-exchange-include" value="" placeholder="123,456,789"></td>
 		</tr>
 	</table>
-	<a id="download-indesign-exchange-xml" class="button button-primary button-large" href="<?php echo admin_url('tools.php?indesign_download=1'); ?>">Download work data</a>
+	<a id="download-indesign-exchange-xml" class="button button-primary button-large" href="<?php echo admin_url('tools.php?indesign_download=1'); ?>">Arbeitsdaten herunterladen</a>
 </div>
 <script type="text/javascript">
 	var exporturl = '<?php echo admin_url('tools.php'); ?>';
