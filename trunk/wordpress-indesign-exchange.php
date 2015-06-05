@@ -30,6 +30,8 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
+require_once plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
+
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/wordpress-indesign-exchange-activator.php

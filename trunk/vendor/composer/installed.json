@@ -1,0 +1,43 @@
+[
+    {
+        "name": "dropbox/dropbox-sdk",
+        "version": "v1.1.5",
+        "version_normalized": "1.1.5.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/dropbox/dropbox-sdk-php.git",
+            "reference": "138bfec02f042fa6a4b384c0ae7ebe92ad122bbd"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/dropbox/dropbox-sdk-php/zipball/138bfec02f042fa6a4b384c0ae7ebe92ad122bbd",
+            "reference": "138bfec02f042fa6a4b384c0ae7ebe92ad122bbd",
+            "shasum": ""
+        },
+        "require": {
+            "ext-curl": "*",
+            "php": ">= 5.3"
+        },
+        "require-dev": {
+            "apigen/apigen": "2.8.2",
+            "phpunit/phpunit": "~4.0",
+            "squizlabs/php_codesniffer": "2.0.0RC3"
+        },
+        "time": "2015-02-23 20:51:29",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-0": {
+                "Dropbox": "lib/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "description": "Dropbox SDK for PHP",
+        "keywords": [
+            "dropbox"
+        ]
+    }
+]

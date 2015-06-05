@@ -1,0 +1,16 @@
+{
+    "name": "barooney/wp-indesign-exchange",
+    "description": "A plugin that will help users to get their WordPress articles exported and easily re-imported into InDesign.",
+    "type": "wordpress-plugin",
+    "require": {
+        "dropbox/dropbox-sdk": "~1.1"
+    },
+    "license": "GPL v2",
+    "authors": [
+        {
+            "name": "Daniel Baron",
+            "email": "daniel@barooney.de"
+        }
+    ],
+    "minimum-stability": "stable"
+}
