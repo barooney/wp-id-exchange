@@ -96,12 +96,19 @@ class Wordpress_Indesign_Exchange_Admin {
 
 		do_action( 'wpidex_preinit' );
 		$this->Wordpress_Indesign_Exchange = $Wordpress_Indesign_Exchange;
+
 		$this->version = $version;
 		$this->zip = new ZIPArchive();
 		Wordpress_Indesign_Exchange_Admin::$files = array();
 		Wordpress_Indesign_Exchange_Admin::$gallery_found = false;
 
 		do_action( 'wpidex_postinit' );
+	}
+
+	function session_start() {
+		if ( ! session_id() ) {
+			session_start();
+		}
 	}
 
 	/**
@@ -150,6 +157,10 @@ class Wordpress_Indesign_Exchange_Admin {
 
 	}
 
+	public function print_dropbox_script() {
+		echo '<script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="idxdw8e2mba0560"></script>';
+	}
+
 	/**
 	 *
 	 * Register the options page
@@ -159,6 +170,7 @@ class Wordpress_Indesign_Exchange_Admin {
 	 */
 	public function add_options_page() {
 		add_options_page('InDesign Exchange Settings', 'InDesign Exchange', 'manage_options', plugin_dir_path( __FILE__ ) . 'partials/wordpress-indesign-exchange-admin-options.php');
+		add_submenu_page(null, 'InDesign Exchange Dropbox OAuth', 'InDesign Exchange Dropbox OAuth', 'manage_options', plugin_dir_path( __FILE__ ) . 'partials/wordpress-indesign-exchange-admin-authorize.php');
 	}
 
 	/**

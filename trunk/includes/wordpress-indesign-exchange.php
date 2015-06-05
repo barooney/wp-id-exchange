@@ -109,6 +109,12 @@ class Wordpress_Indesign_Exchange {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/wordpress-indesign-exchange-i18n.php';
 
 		/**
+		 * The class responsible for handling dropbox usage
+		 * of the plugin.
+		 */
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/wordpress-indesign-exchange-dropbox.php';
+
+		/**
 		 * The class responsible for defining all actions that occur in the Dashboard.
 		 */
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/wordpress-indesign-exchange-admin.php';
@@ -153,11 +159,15 @@ class Wordpress_Indesign_Exchange {
 		$plugin_admin = new Wordpress_Indesign_Exchange_Admin( $this->get_Wordpress_Indesign_Exchange(), $this->get_version() );
 
 		$this->loader->add_action( 'plugins_loaded', $plugin_admin, 'get_indesign_xml' );
+
 		
+		$this->loader->add_action( 'admin_init', $plugin_admin, 'session_start' );
+
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'add_options_page' );
 		$this->loader->add_action( 'admin_menu', $plugin_admin, 'add_management_page' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
+		$this->loader->add_filter( 'admin_enqueue_scripts', $plugin_admin, 'print_dropbox_script', 9999 );
 		$this->loader->add_filter( 'add_id_ex_post', $plugin_admin, 'add_post_to_xml', 9999 );
 
 	}

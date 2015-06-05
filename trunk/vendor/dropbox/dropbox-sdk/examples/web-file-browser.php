@@ -203,7 +203,7 @@ function getWebAuth()
     list($appInfo, $clientIdentifier, $userLocale) = getAppConfig();
     $redirectUri = getUrl("dropbox-auth-finish");
     $csrfTokenStore = new dbx\ArrayEntryStore($_SESSION, 'dropbox-auth-csrf-token');
-    return new dbx\WebAuth($appInfo, $clientIdentifier, $redirectUri, $csrfTokenStore, $userLocale);
+    return new dbx\WebAuth($appInfo, $clientIdentifier, $redirectUri, $csrfTokenStore);
 }
 
 function renderFile($entry)

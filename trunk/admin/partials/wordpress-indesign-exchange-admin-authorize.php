@@ -19,20 +19,18 @@ $dropbox = new Wordpress_Indesign_Exchange_Dropbox();
 <div id="wordpress-indesign-exchange-options" class="wrap">
 	<h2>WordPress InDesign Exchange Options</h2>
 
-	<h3>Dropbox Connect</h3>
+	<h3>Dropbox Connect Finish</h3>
 
-	<?php if ( $dropbox->is_authorized() ) : ?>
+	<?php
+	$credentials = $dropbox->get_access_token( $_GET );
+	if ( is_array( $credentials ) ) :
+	?>
+		<p>You successfully set up your Dropbox account to work with WordPress InDesign Exchange on <a href="<?php echo esc_attr( home_url() ); ?>"><?php echo bloginfo( 'title' ); ?></a></p>
 
-		<p>You are already authenticated! Have fun now!</p>
-
-		<p><strong>User ID: </strong> <?php echo $dropbox->get_user_id(); ?></p>
-
-	<?php else : ?>
-
-		<p>Click here to enable Dropbox export for WPIDEX.<br>This allows you to export all your layout-relevant files to your Dropbox, which then syncs to all your Clients.</p>
-
-		<p><a class="button button-primary" href="<?php echo $dropbox->get_authorization_url(); ?>">Dropbox Login</a></p>
+	<?php else: ?>
+		<p>Something went awfully wrong. Please try again.</p>
 	<?php endif; ?>
+	<p><a href="<?php echo esc_attr( admin_url() . 'options-general.php?page=wp-id-exchange/admin/partials/wordpress-indesign-exchange-admin-options.php' ); ?>">Go back</a></p>
 
 	
 </div>
