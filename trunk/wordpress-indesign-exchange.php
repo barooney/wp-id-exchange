@@ -16,7 +16,7 @@
  * Plugin Name:       WordPress InDesign Exchange
  * Plugin URI:        http://barooney.de/meine-projekte/wordpress-indesign-exchange/
  * Description:       A plugin that will help users to get their WordPress articles exported and easily re-imported into InDesign.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Author:            Baron IT Consulting
  * Author URI:        http://barooney.de/
  * License:           GPL-2.0+

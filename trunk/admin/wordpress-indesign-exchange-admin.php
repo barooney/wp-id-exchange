@@ -212,7 +212,7 @@ class Wordpress_Indesign_Exchange_Admin {
 			$args = apply_filters( 'wpidex_change_query_args', $args );
 			$posts = get_posts( $args );
 			//var_dump($posts);
-			
+
 			$filename = tempnam( '/tmp/', 'wp-id-exchange-' );
 			if ( $this->zip->open( $filename, ZipArchive::CREATE ) !== TRUE ) {
 				exit( "cannot open <$filename>\n" );
@@ -272,7 +272,7 @@ class Wordpress_Indesign_Exchange_Admin {
 
 			$this->zip->addFile($f, '/attachments/' . basename($f));
 		}
-		
+
 		$post_title = Wordpress_Indesign_Exchange_Admin::$dom->createElement('post_title', $p->post_title);
 		$xml_post->appendChild($post_title);
 		$post_date = Wordpress_Indesign_Exchange_Admin::$dom->createElement('post_date', date_create($p->post_date)->format($this->requirement['date_format']));
@@ -300,7 +300,7 @@ class Wordpress_Indesign_Exchange_Admin {
 		// iterate through the post's paragraphs
 		$paragraph_ctr = 0;
 		for ( $paragraph_ctr = 0; $paragraph_ctr < count($post_content_paragraphs); $paragraph_ctr++ ) {
-			$para = $post_content_paragraphs[$paragraph_ctr];
+			$para = trim( $post_content_paragraphs[$paragraph_ctr] );
 
 			// skip "more" tags
 			// TODO #42: create checkbox to keep them in an article to generate a page break
@@ -373,7 +373,7 @@ class Wordpress_Indesign_Exchange_Admin {
 				$table_doc = new DOMDocument;
 				$table_doc->loadHTML($table_html);
 				foreach ($table_doc->childNodes as $node) {
-					if ($node->hasChildNodes() && $node->childNodes->length == 1 && $node->firstChild->nodeName === 'body') { 
+					if ($node->hasChildNodes() && $node->childNodes->length == 1 && $node->firstChild->nodeName === 'body') {
 						$table_node = $node->firstChild->firstChild; // <table>
 						foreach ($table_node->childNodes as $table_part) { // <thead>, <tfoot> and <tbody>
 							$table_struct[$table_part->nodeName] = array();
@@ -478,18 +478,24 @@ class Wordpress_Indesign_Exchange_Admin {
 			}
 
 			// handle lists
-			if (strpos($para, '<ul') !== FALSE) {
-				$list_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('ul');
+			// handles <ol> lists correctly since 1.0.1
+			$ol = strpos($para, '<ol') !== FALSE;
+			$ul = strpos($para, '<ul') !== FALSE;
+
+			if ($ol || $ul) {
+				$list_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement( $ol ? 'ol' : 'ul' );
 				do {
 					$paragraph_ctr++;
 					$para = $post_content_paragraphs[$paragraph_ctr];
 
-					if (strpos($para, '</ul') === FALSE) {
+					$ol_end = strpos($para, '</ol') === FALSE;
+					$ul_end = strpos($para, '</ul') === FALSE;
+					if ($ol_end && $ul_end) {
 						$list_item_element = Wordpress_Indesign_Exchange_Admin::$dom->createElement('li', strip_tags($para, '<em><strong><i><b>'));
 						$list_element->appendChild($list_item_element);
 					}
 
-				} while (strpos($para, '</ul') === FALSE);
+				} while ($ol_end && $ul_end);
 				$post_content->appendChild($list_element);
 				continue;
 			}
@@ -547,7 +553,7 @@ class Wordpress_Indesign_Exchange_Admin {
 	}
 
 	private function _get_image_id_from_url( $attachment_url = '' ) {
- 
+
 		global $wpdb;
 		$attachment_id = false;
 
